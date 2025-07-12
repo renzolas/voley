@@ -17,16 +17,33 @@ def interfaz_admin():
     horario = st.selectbox("Horario", ["13:00 - 14:00", "14:00 - 15:00", "15:00 - 16:00"])
     aforo = st.number_input("Máximo de alumnos", min_value=1, max_value=20, step=1)
 
-    # Forzar render del checkbox sin condiciones
-    crear_periodica = st.checkbox("¿Repetir esta clase semanalmente?")
-    semanas = st.number_input("¿Durante cuántas semanas repetir?", min_value=1, max_value=12, value=4, disabled=not crear_periodica)
+    # ✅ Nueva opción de periodicidad
+    periodicidad = st.selectbox(
+        "¿Repetir esta clase semanalmente?",
+        [
+            "No",
+            "Repetir por 1 semana",
+            "Repetir por 2 semanas",
+            "Repetir por 3 semanas",
+            "Repetir por todo el mes"
+        ]
+    )
+
+    # Mapear texto a número de repeticiones
+    mapa_periodos = {
+        "No": 1,
+        "Repetir por 1 semana": 2,
+        "Repetir por 2 semanas": 3,
+        "Repetir por 3 semanas": 4,
+        "Repetir por todo el mes": 5
+    }
+    semanas = mapa_periodos[periodicidad]
 
     if st.button("Agregar clase"):
-    if not nombre_clase:
-        st.error("Debes ingresar el nombre de la clase.")
-    else:
-        if crear_periodica:
-            for i in range(int(semanas)):
+        if not nombre_clase:
+            st.error("Debes ingresar el nombre de la clase.")
+        else:
+            for i in range(semanas):
                 nueva_fecha = fecha + datetime.timedelta(weeks=i)
                 crear_clase(
                     coach=st.session_state.username,
@@ -36,17 +53,10 @@ def interfaz_admin():
                     horario=horario,
                     aforo=aforo
                 )
-            st.success(f"Clases repetidas durante {semanas} semanas creadas ✅")
-        else:
-            crear_clase(
-                coach=st.session_state.username,
-                deporte=deporte,
-                nombre_clase=nombre_clase,
-                fecha=str(fecha),
-                horario=horario,
-                aforo=aforo
-            )
-            st.success("Clase creada con éxito ✅")
+            if semanas > 1:
+                st.success(f"Clase creada y repetida por {semanas - 1} semanas ✅")
+            else:
+                st.success("Clase creada ✅")
 
     st.divider()
     st.subheader("Tus clases creadas")
@@ -89,5 +99,3 @@ if __name__ == "__main__" or st.session_state.get("user_role") == "admin":
         interfaz_admin()
     else:
         st.warning("Inicia sesión como entrenador para acceder a esta vista.")
-
-
