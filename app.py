@@ -43,7 +43,7 @@ def login():
             st.session_state.user_role = result  # 'admin' o 'user'
             st.session_state.username = username
             st.success(f"Bienvenido, {username} ({result})")
-            st.experimental_rerun()
+            st.rerun()
         else:
             st.error(result)
 
@@ -71,7 +71,7 @@ def logout():
     st.session_state.logged_in = False
     st.session_state.user_role = None
     st.session_state.username = None
-    st.experimental_rerun()
+    st.rerun()
 
 # Función para interfaz admin (entrenador)
 def interfaz_admin():
