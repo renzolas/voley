@@ -10,15 +10,16 @@ from data.db_simulada import (
 def interfaz_admin():
     st.header(f"Panel de Entrenador - {st.session_state.username} 🏋️‍♂️")
 
-    st.subheader("Crear nueva clase")
+        st.subheader("Crear nueva clase")
     nombre_clase = st.text_input("Nombre de la clase")
     deporte = st.selectbox("Deporte", ["voley", "futbol", "gym"])
     fecha = st.date_input("Fecha", min_value=datetime.date.today())
     horario = st.selectbox("Horario", ["13:00 - 14:00", "14:00 - 15:00", "15:00 - 16:00"])
     aforo = st.number_input("Máximo de alumnos", min_value=1, max_value=20, step=1)
 
-    # ✅ Crear clase periódica
+    # ✅ Mostrar checkbox y control siempre
     crear_periodica = st.checkbox("¿Hacer clase periódica (repetir semanalmente)?")
+    semanas = 1  # valor por defecto si no se marca el checkbox
 
     if crear_periodica:
         semanas = st.number_input("¿Durante cuántas semanas repetir?", min_value=1, max_value=12, value=4)
