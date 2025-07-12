@@ -1,84 +1,66 @@
 import streamlit as st
-from controllers.auth import registrar_usuario, validar_login
+from controllers.auth import login, register
+from pages import admin, usuario
 
-st.set_page_config(page_title="Reservas Deportivas", page_icon="⚽", layout="centered")
+# Configuración básica
+st.set_page_config(page_title="Reservas Deportivas", page_icon="🏐", layout="centered")
 
-st.markdown("""
-    <style>
-        [data-testid="stSidebarNav"] {
-            display: none;
-        }
-    </style>
-""", unsafe_allow_html=True)
-
-if 'logged_in' not in st.session_state:
+# Inicializar sesión
+if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
-if 'user_role' not in st.session_state:
+if "user_role" not in st.session_state:
     st.session_state.user_role = None
-if 'auth_mode' not in st.session_state:
-    st.session_state.auth_mode = 'Login'
-if 'username' not in st.session_state:
+if "username" not in st.session_state:
     st.session_state.username = None
-
-def login():
-    st.subheader("Iniciar sesión")
-    username = st.text_input("Usuario")
-    password = st.text_input("Contraseña", type="password")
-
-    if st.button("Ingresar"):
-        success, result = validar_login(username, password)
-        if success:
-            st.session_state.logged_in = True
-            st.session_state.user_role = result
-            st.session_state.username = username
-            st.success(f"Bienvenido, {username} ({result})")
-            st.rerun()
-        else:
-            st.error(result)
-
-def register():
-    st.subheader("Registrarse")
-    username = st.text_input("Nuevo usuario")
-    password = st.text_input("Nueva contraseña", type="password")
-    confirm = st.text_input("Confirmar contraseña", type="password")
-    rol = st.selectbox("Selecciona tu perfil", ["user", "admin"], index=0)
-
-    if st.button("Crear cuenta"):
-        if password != confirm:
-            st.error("Las contraseñas no coinciden")
-        else:
-            success, msg = registrar_usuario(username, password, rol)
-            if success:
-                st.success(msg)
-                st.session_state.auth_mode = 'Login'
-            else:
-                st.error(msg)
 
 def logout():
     st.session_state.logged_in = False
     st.session_state.user_role = None
     st.session_state.username = None
-    st.rerun()
+    st.experimental_rerun()
 
 def main():
     st.title("App de Reservas Deportivas 🏐⚽🏋️‍♂️")
 
     if not st.session_state.logged_in:
-        auth_option = st.radio("Selecciona una opción:", ["Login", "Registrarse"], horizontal=True)
-        st.session_state.auth_mode = auth_option
-
-        if st.session_state.auth_mode == 'Login':
-            login()
+        opcion = st.radio("¿Qué deseas hacer?", ["Login", "Registrarse"], horizontal=True)
+        if opcion == "Login":
+            username = st.text_input("Usuario")
+            password = st.text_input("Contraseña", type="password")
+            if st.button("Ingresar"):
+                success, result = login(username, password)
+                if success:
+                    st.session_state.logged_in = True
+                    st.session_state.user_role = result
+                    st.session_state.username = username
+                    st.success(f"Bienvenido {username} ({result})")
+                    st.experimental_rerun()
+                else:
+                    st.error(result)
         else:
-            register()
+            username = st.text_input("Nuevo usuario")
+            password = st.text_input("Nueva contraseña", type="password")
+            confirm = st.text_input("Confirmar contraseña", type="password")
+            rol = st.selectbox("Perfil", ["user", "admin"])
+            if st.button("Crear cuenta"):
+                if password != confirm:
+                    st.error("Las contraseñas no coinciden")
+                else:
+                    success, msg = register(username, password, rol)
+                    if success:
+                        st.success(msg)
+                        st.experimental_rerun()
+                    else:
+                        st.error(msg)
     else:
-        st.button("Cerrar Sesión", on_click=logout)
+        st.sidebar.write(f"Usuario: {st.session_state.username} ({st.session_state.user_role})")
+        if st.sidebar.button("Cerrar sesión"):
+            logout()
 
         if st.session_state.user_role == "admin":
-            st.success("Has ingresado como entrenador. Ve al menú lateral izquierdo y selecciona tu panel.")
-        elif st.session_state.user_role == "user":
-            st.success("Has ingresado como alumno. Ve al menú lateral izquierdo para ver tus reservas.")
+            admin.interfaz_admin()
+        else:
+            usuario.interfaz_usuario()
 
 if __name__ == "__main__":
     main()
-
