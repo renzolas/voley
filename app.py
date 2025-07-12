@@ -44,6 +44,7 @@ def register():
     username = st.text_input("Nuevo usuario")
     password = st.text_input("Nueva contraseña", type="password")
     confirm = st.text_input("Confirmar contraseña", type="password")
+    rol = st.selectbox("Selecciona tu perfil", ["user", "admin"], index=0)
     if st.button("Crear cuenta"):
         if password != confirm:
             st.error("Las contraseñas no coinciden")
@@ -51,6 +52,8 @@ def register():
             # Aquí guardaríamos en base de datos (simulado)
             st.success("¡Cuenta creada con éxito! Por favor inicia sesión")
             st.session_state.auth_mode = 'Login'
+        else:
+            st.error(msg)
 
 # Función para cerrar sesión
 def logout():
