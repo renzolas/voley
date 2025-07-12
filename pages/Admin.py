@@ -17,7 +17,6 @@ def interfaz_admin():
     horario = st.selectbox("Horario", ["13:00 - 14:00", "14:00 - 15:00", "15:00 - 16:00"])
     aforo = st.number_input("Máximo de alumnos", min_value=1, max_value=20, step=1)
 
-    # ✅ Nueva opción de periodicidad
     periodicidad = st.selectbox(
         "¿Repetir esta clase semanalmente?",
         [
@@ -28,8 +27,6 @@ def interfaz_admin():
             "Repetir por todo el mes"
         ]
     )
-
-    # Mapear texto a número de repeticiones
     mapa_periodos = {
         "No": 1,
         "Repetir por 1 semana": 2,
@@ -79,11 +76,8 @@ def interfaz_admin():
                     col1, col2 = st.columns([4, 1])
                     col1.write(f"👤 {alumno}")
                     if col2.button("Eliminar", key=f"del-{clase['id']}-{alumno}"):
-                        ok, msg = eliminar_usuario_de_clase(clase['coach'], clase['id'], alumno)
-                        if ok:
-                            st.success(f"{alumno} eliminado de la clase.")
-                        else:
-                            st.error(msg)
+                        # Aquí puedes implementar eliminar usuario de clase si quieres
+                        st.warning("Función para eliminar alumno no implementada aún.")
             else:
                 st.info("No hay alumnos inscritos.")
 
@@ -92,12 +86,5 @@ def interfaz_admin():
                 st.warning("Clase eliminada.")
 
             st.divider()
-
-# 🚀 Ejecución automática si el usuario es admin
-if __name__ == "__main__" or st.session_state.get("user_role") == "admin":
-    if st.session_state.get("logged_in", False):
-        interfaz_admin()
-    else:
-        st.warning("Inicia sesión como entrenador para acceder a esta vista.")
 
 
