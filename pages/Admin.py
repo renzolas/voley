@@ -10,46 +10,43 @@ from data.db_simulada import (
 def interfaz_admin():
     st.header(f"Panel de Entrenador - {st.session_state.username} 🏋️‍♂️")
 
-        st.subheader("Crear nueva clase")
+    st.subheader("Crear nueva clase")
     nombre_clase = st.text_input("Nombre de la clase")
     deporte = st.selectbox("Deporte", ["voley", "futbol", "gym"])
     fecha = st.date_input("Fecha", min_value=datetime.date.today())
     horario = st.selectbox("Horario", ["13:00 - 14:00", "14:00 - 15:00", "15:00 - 16:00"])
     aforo = st.number_input("Máximo de alumnos", min_value=1, max_value=20, step=1)
 
-    # ✅ Mostrar checkbox y control siempre
-    crear_periodica = st.checkbox("¿Hacer clase periódica (repetir semanalmente)?")
-    semanas = 1  # valor por defecto si no se marca el checkbox
-
-    if crear_periodica:
-        semanas = st.number_input("¿Durante cuántas semanas repetir?", min_value=1, max_value=12, value=4)
+    # Forzar render del checkbox sin condiciones
+    crear_periodica = st.checkbox("¿Repetir esta clase semanalmente?")
+    semanas = st.number_input("¿Durante cuántas semanas repetir?", min_value=1, max_value=12, value=4, disabled=not crear_periodica)
 
     if st.button("Agregar clase"):
-        if not nombre_clase:
-            st.error("Debes ingresar el nombre de la clase.")
-        else:
-            if crear_periodica:
-                for i in range(int(semanas)):
-                    nueva_fecha = fecha + datetime.timedelta(weeks=i)
-                    crear_clase(
-                        coach=st.session_state.username,
-                        deporte=deporte,
-                        nombre_clase=nombre_clase,
-                        fecha=str(nueva_fecha),
-                        horario=horario,
-                        aforo=aforo
-                    )
-                st.success(f"Clases periódicas creadas para {semanas} semanas ✅")
-            else:
+    if not nombre_clase:
+        st.error("Debes ingresar el nombre de la clase.")
+    else:
+        if crear_periodica:
+            for i in range(int(semanas)):
+                nueva_fecha = fecha + datetime.timedelta(weeks=i)
                 crear_clase(
                     coach=st.session_state.username,
                     deporte=deporte,
                     nombre_clase=nombre_clase,
-                    fecha=str(fecha),
+                    fecha=str(nueva_fecha),
                     horario=horario,
                     aforo=aforo
                 )
-                st.success("Clase creada con éxito ✅")
+            st.success(f"Clases repetidas durante {semanas} semanas creadas ✅")
+        else:
+            crear_clase(
+                coach=st.session_state.username,
+                deporte=deporte,
+                nombre_clase=nombre_clase,
+                fecha=str(fecha),
+                horario=horario,
+                aforo=aforo
+            )
+            st.success("Clase creada con éxito ✅")
 
     st.divider()
     st.subheader("Tus clases creadas")
