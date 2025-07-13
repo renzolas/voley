@@ -34,10 +34,13 @@ def coach_view():
         st.markdown(f"**{c['title']}** ({c['sport']}) - {c['date']} {c['hour']} {badge}")
         st.text(f"Inscritos: {len(c['enrolled'])}/{c['capacity']}")
 
-        if st.button(f"Eliminar clase {c['id']}", key=c['id']):
-            st.session_state["reservations"] = [r for r in st.session_state["reservations"] if r["class_id"] != c["id"]]
+        if st.button(f"Eliminar clase {c['id']}", key=f"eliminar_{c['id']}"):
+            st.session_state["reservations"] = [
+                r for r in st.session_state["reservations"] if r["class_id"] != c["id"]
+            ]
             st.session_state["classes"].remove(c)
-            st.session_state["rerun_requested"] = True  # MARCAR rerun (no ejecutarlo)
+            st.success("Clase eliminada.")
+            st.session_state["dummy_refresh"] = not st.session_state["dummy_refresh"]
 
 
 
