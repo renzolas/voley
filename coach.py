@@ -75,3 +75,35 @@ def coach_view():
                     st.success("Clase eliminada.")
                     st.session_state["dummy_refresh"] = not st.session_state["dummy_refresh"]
                     return  # cortar ejecución tras eliminar
+
+    st.divider()
+    st.subheader("📊 Estadísticas y KPIs")
+
+    # Total de clases
+    total_clases = len(my_classes)
+    total_reservas = sum(c["enrolled"] for c in my_classes)
+
+    st.markdown(f"""
+    - 🧾 **Total de clases creadas:** {total_clases}  
+    - 🧍‍♂️ **Total de reservas recibidas:** {total_reservas}
+    """)
+
+    # Alumnos más frecuentes
+    mis_ids = [c["id"] for c in my_classes]
+    alumno_frecuencia = {}
+    for r in st.session_state["reservations"]:
+        if r["class_id"] in mis_ids:
+            alumno_frecuencia[r["username"]] = alumno_frecuencia.get(r["username"], 0) + 1
+
+    if alumno_frecuencia:
+        st.markdown("📌 **Alumnos más frecuentes:**")
+        for alumno, freq in sorted(alumno_frecuencia.items(), key=lambda x: x[1], reverse=True):
+            st.markdown(f"- {alumno} — {freq} reservas")
+
+    # Clases más llenas
+    llenadas = sorted(my_classes, key=lambda c: c["enrolled"], reverse=True)[:3]
+    if llenadas:
+        st.markdown("🔥 **Clases más populares:**")
+        for c in llenadas:
+            porcentaje = (c["enrolled"] / c["capacity"]) * 100
+            st.markdown(f"- {c['title']} ({c['date']}) — {porcentaje:.0f}% lleno")
