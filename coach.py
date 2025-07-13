@@ -44,7 +44,7 @@ def coach_view():
             st.session_state["classes"].append(base_class)
 
         st.success("✅ Clase(s) creada(s) correctamente.")
-        st.experimental_rerun()
+        st.rerun()
 
     st.divider()
     st.markdown("### 📋 Tus clases creadas")
