@@ -17,10 +17,12 @@ if "rerun_flag" not in st.session_state:
     st.session_state["rerun_flag"] = False
 
 # --- Ejecutar rerun si está marcado ---
-if st.session_state["rerun_flag"]:
+if st.session_state["rerun_flag"] or st.session_state.get("delete_rerun_flag", False):
     st.session_state["rerun_flag"] = False
+    st.session_state["delete_rerun_flag"] = False
     st.experimental_rerun()
-    st.stop()  # Detener la ejecución inmediatamente para evitar error
+    st.stop()
+
 
 # --- Interfaz principal ---
 st.title("🏐 VolleyFit App - Reservas deportivas")
