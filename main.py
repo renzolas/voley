@@ -4,7 +4,7 @@ from auth import login_view, register_view
 from coach import coach_view
 from user import user_view
 
-# Inicializar estructuras en RAM
+# --- Inicializar estructuras en RAM ---
 if "users" not in st.session_state:
     st.session_state["users"] = []  # [{username, password, role}]
 if "classes" not in st.session_state:
@@ -13,8 +13,15 @@ if "reservations" not in st.session_state:
     st.session_state["reservations"] = []  # [{username, class_id}]
 if "logged_user" not in st.session_state:
     st.session_state["logged_user"] = None
+if "rerun_flag" not in st.session_state:
+    st.session_state["rerun_flag"] = False
 
-# Menú de navegación
+# --- Forzar recarga si se marcó en login (solución a crash) ---
+if st.session_state["rerun_flag"]:
+    st.session_state["rerun_flag"] = False
+    st.experimental_rerun()
+
+# --- Menú de navegación ---
 st.title("🏐 VolleyFit App - Reservas deportivas")
 
 if st.session_state["logged_user"] is None:
@@ -34,4 +41,5 @@ else:
         coach_view()
     elif user["role"] == "user":
         user_view()
+
 
