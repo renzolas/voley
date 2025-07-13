@@ -35,10 +35,10 @@ def coach_view():
         st.text(f"Inscritos: {len(c['enrolled'])}/{c['capacity']}")
 
         if st.button(f"Eliminar clase {c['id']}", key=c['id']):
-            # Avisar a usuarios (simplemente eliminar reservas relacionadas)
+            # Eliminar reservas asociadas
             st.session_state["reservations"] = [r for r in st.session_state["reservations"] if r["class_id"] != c["id"]]
             st.session_state["classes"].remove(c)
-            st.success("Clase eliminada.")
-            st.experimental_rerun()
+            st.session_state["delete_rerun_flag"] = True
+
 
 
