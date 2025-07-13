@@ -31,9 +31,11 @@ def login_view():
              if u["username"] == username and u["password"] == password),
             None
         )
+        # Cuando se hace login exitoso
         if user:
             st.session_state["logged_user"] = user
-            st.session_state["rerun_flag"] = True  # Se maneja desde main.py
+            st.session_state["rerun_requested"] = True  # MARCAR rerun (ya no lo ejecutamos aquí)
+
         else:
             st.error("Usuario o contraseña incorrectos.")
 
