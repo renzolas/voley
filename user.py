@@ -1,98 +1,101 @@
 # user.py
 import streamlit as st
-from datetime import datetime
+from datetime import datetime, timedelta
 
 def user_view():
-    st.header("🙋 Panel del Usuario")
+    st.header("👟 Reservas deportivas")
 
-    username = st.session_state["logged_user"]["username"]
+    deportes = {
+        "voley": "🏐",
+        "futbol": "⚽",
+        "gym": "🏋️"
+    }
 
-    # 🔔 Notificaciones
-    if st.session_state["notifications"].get(username):
-        with st.expander("📬 Tienes notificaciones"):
-            for note in st.session_state["notifications"][username]:
-                st.warning(note)
-            if st.button("Marcar como leídas"):
-                st.session_state["notifications"][username] = []
-                st.experimental_rerun()
+    st.markdown("### 📌 Selecciona un deporte")
+    deporte = st.selectbox("Elige tu deporte favorito", list(deportes.keys()))
 
-    st.divider()
+    st.markdown("### 📅 Ver clases disponibles por día")
+    selected_day = st.date_input("Selecciona una fecha", min_value=datetime.today())
 
-    # 🎯 Filtros de búsqueda
-    st.subheader("🎯 Buscar clases")
-    col1, col2 = st.columns(2)
-    with col1:
-        selected_sport = st.selectbox("Selecciona un deporte", ["voley", "futbol", "gym"])
-    with col2:
-        selected_date = st.date_input("Selecciona una fecha", min_value=datetime.today())
-
-    # 🎯 Filtrado de clases
-    filtered_classes = [
+    clases_disponibles = [
         c for c in st.session_state["classes"]
-        if c["sport"] == selected_sport and c["date"] == selected_date.strftime("%Y-%m-%d")
+        if c["sport"] == deporte and c["date"] == selected_day.strftime("%Y-%m-%d")
     ]
 
-    st.markdown("### 📋 Clases disponibles")
-    if not filtered_classes:
-        st.info("No hay clases disponibles para este deporte y fecha.")
+    if not clases_disponibles:
+        st.info("No hay clases disponibles para este día.")
     else:
-        for c in filtered_classes:
-            lleno = c["enrolled"] >= c["capacity"]
-            estado = "🔴 Lleno" if lleno else "🟢 Disponible"
+        st.markdown("### 📋 Clases disponibles")
+        for clase in clases_disponibles:
+            coach = clase["coach"]
+            icono = deportes[clase["sport"]]
+            estado = "🟢 Disponible" if clase["enrolled"] < clase["capacity"] else "🔴 Lleno"
 
-            with st.container():
+            st.markdown(f"<div class='card'>", unsafe_allow_html=True)
+            col1, col2 = st.columns([4, 1])
+            with col1:
                 st.markdown(f"""
-                    <div style="background-color:#f0f0f5; padding:15px; border-radius:8px; margin-bottom:10px">
-                        <strong>{c['title']}</strong> — {c['hour']}  
-                        <br>📅 {c['date']} | 👥 {c['enrolled']} / {c['capacity']}  
-                        <br>Estado: <span style='color:{"red" if lleno else "green"}'>{estado}</span>
-                """, unsafe_allow_html=True)
-
-                if not lleno:
-                    btn_key = f"btn_reserve_{c['id']}"
-                    if st.button("✅ Reservar esta clase", key=btn_key):
-                        ya_reservado = any(r for r in st.session_state["reservations"]
-                                           if r["username"] == username and r["class_id"] == c["id"])
+                **{icono} {clase['title']}**  
+                📅 {clase['date']} — 🕒 {clase['hour']}  
+                🧑‍🏫 Coach: `{coach}`  
+                👥 {clase['enrolled']} / {clase['capacity']}  
+                **Estado:** {estado}
+                """)
+            with col2:
+                if clase["enrolled"] < clase["capacity"]:
+                    if st.button("Reservar", key=f"reservar_{clase['id']}"):
+                        ya_reservado = any(
+                            r for r in st.session_state["reservations"]
+                            if r["username"] == st.session_state["logged_user"]["username"] and r["class_id"] == clase["id"]
+                        )
                         if ya_reservado:
-                            st.warning("Ya reservaste esta clase.")
+                            st.warning("Ya estás registrado en esta clase.")
                         else:
                             st.session_state["reservations"].append({
-                                "username": username,
-                                "class_id": c["id"]
+                                "username": st.session_state["logged_user"]["username"],
+                                "class_id": clase["id"]
                             })
-                            c["enrolled"] += 1
-                            st.success("¡Reservaste tu clase!")
+                            clase["enrolled"] += 1
+                            st.success("✅ Clase reservada exitosamente.")
                             st.experimental_rerun()
-                st.markdown("</div>", unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
 
     st.divider()
-    st.subheader("📌 Mis Reservas")
+    st.subheader("📦 Tus reservas")
 
-    user_reservas = [
+    mis_reservas = [
         r for r in st.session_state["reservations"]
-        if r["username"] == username
+        if r["username"] == st.session_state["logged_user"]["username"]
     ]
+    clases_dict = {c["id"]: c for c in st.session_state["classes"]}
 
-    if not user_reservas:
-        st.info("No tienes clases reservadas.")
+    if not mis_reservas:
+        st.info("No tienes reservas activas.")
     else:
-        for r in user_reservas:
-            clase = next((c for c in st.session_state["classes"] if c["id"] == r["class_id"]), None)
-            if clase:
-                with st.container():
-                    st.markdown(f"""
-                        <div style="background-color:#fff0f0; padding:12px; border-radius:8px; margin-bottom:10px">
-                            <strong>{clase['title']}</strong> — {clase['sport'].capitalize()}  
-                            <br>📅 {clase['date']} | 🕐 {clase['hour']}  
-                            <br>👥 {clase['enrolled']} / {clase['capacity']}
-                    """, unsafe_allow_html=True)
+        for reserva in mis_reservas:
+            clase = clases_dict.get(reserva["class_id"])
+            if not clase:
+                continue
 
-                    if st.button("❌ Cancelar reserva", key=f"cancel_{clase['id']}"):
-                        st.session_state["reservations"] = [
-                            rr for rr in st.session_state["reservations"] if rr != r
-                        ]
-                        clase["enrolled"] -= 1
-                        st.success("Has cancelado tu reserva.")
-                        st.experimental_rerun()
-                    st.markdown("</div>", unsafe_allow_html=True)
+            icono = deportes.get(clase["sport"], "📚")
+            st.markdown(f"<div class='card'>", unsafe_allow_html=True)
+            col1, col2 = st.columns([4, 1])
+            with col1:
+                st.markdown(f"""
+                **{icono} {clase['title']}**  
+                📅 {clase['date']} — 🕒 {clase['hour']}  
+                🧑‍🏫 Coach: `{clase['coach']}`  
+                👥 {clase['enrolled']} / {clase['capacity']}
+                """)
+            with col2:
+                if st.button("Cancelar", key=f"cancelar_{clase['id']}"):
+                    st.session_state["reservations"] = [
+                        r for r in st.session_state["reservations"]
+                        if not (r["username"] == st.session_state["logged_user"]["username"] and r["class_id"] == clase["id"])
+                    ]
+                    clase["enrolled"] -= 1
+                    st.success("❌ Reserva cancelada.")
+                    st.experimental_rerun()
+            st.markdown("</div>", unsafe_allow_html=True)
+
 
