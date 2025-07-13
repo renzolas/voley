@@ -13,7 +13,7 @@ def login_view():
             if user["username"] == username and user["password"] == password:
                 st.session_state["logged_user"] = user
                 st.success(f"Bienvenido {username} 👋")
-                st.experimental_rerun()
+                st.rerun()
                 return
         st.error("Usuario o contraseña incorrectos.")
 
