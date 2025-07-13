@@ -29,7 +29,8 @@ def login_view():
         user = next((u for u in st.session_state["users"] if u["username"] == username and u["password"] == password), None)
         if user:
             st.session_state["logged_user"] = user
-            st.experimental_rerun()
+            st.session_state["rerun_flag"] = True
+
         else:
             st.error("Usuario o contraseña incorrectos.")
 
