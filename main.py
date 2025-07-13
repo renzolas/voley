@@ -13,16 +13,16 @@ if "reservations" not in st.session_state:
     st.session_state["reservations"] = []
 if "logged_user" not in st.session_state:
     st.session_state["logged_user"] = None
-if "rerun_flag" not in st.session_state:
-    st.session_state["rerun_flag"] = False
+if "rerun_requested" not in st.session_state:
+    st.session_state["rerun_requested"] = False
 
-# --- Ejecutar rerun si está marcado ---
-if st.session_state["rerun_flag"] or st.session_state.get("delete_rerun_flag", False):
-    st.session_state["rerun_flag"] = False
-    st.session_state["delete_rerun_flag"] = False
-    st.experimental_rerun()
-    st.stop()
+# --- Manejo seguro de rerun al inicio del ciclo ---
+def safe_rerun():
+    if st.session_state.get("rerun_requested", False):
+        st.session_state["rerun_requested"] = False
+        st.experimental_rerun()
 
+safe_rerun()  # Solo se llama si fue marcado previamente
 
 # --- Interfaz principal ---
 st.title("🏐 VolleyFit App - Reservas deportivas")
@@ -38,7 +38,8 @@ else:
     st.sidebar.success(f"Conectado como: {user['username']} ({user['role']})")
     if st.sidebar.button("Cerrar sesión"):
         st.session_state["logged_user"] = None
-        st.experimental_rerun()
+        st.session_state["rerun_requested"] = True  # usamos la nueva bandera
+        safe_rerun()
 
     if user["role"] == "coach":
         coach_view()
