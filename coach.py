@@ -31,7 +31,7 @@ def coach_view():
         }
 
         if periodic:
-            for i in range(3):  # Crea clases para hoy y 2 días más
+            for i in range(3):
                 new_class = base_class.copy()
                 new_class["date"] = (date + timedelta(days=i)).strftime("%Y-%m-%d")
                 new_class["id"] = str(uuid.uuid4())
@@ -74,19 +74,37 @@ def coach_view():
                     ]
                     st.success("Clase eliminada.")
                     st.session_state["dummy_refresh"] = not st.session_state["dummy_refresh"]
-                    return  # cortar ejecución tras eliminar
+                    return
+
+            # Mostrar alumnos con opción de eliminar
+            alumnos = [r["username"] for r in st.session_state["reservations"] if r["class_id"] == c["id"]]
+            if alumnos:
+                with st.expander("👥 Ver y eliminar alumnos"):
+                    for alumno in alumnos:
+                        col_a1, col_a2 = st.columns([3, 1])
+                        with col_a1:
+                            st.write(f"- {alumno}")
+                        with col_a2:
+                            if st.button("Eliminar", key=f"del_{alumno}_{c['id']}"):
+                                st.session_state["reservations"] = [
+                                    r for r in st.session_state["reservations"]
+                                    if not (r["class_id"] == c["id"] and r["username"] == alumno)
+                                ]
+                                c["enrolled"] -= 1
+                                st.success(f"{alumno} eliminado de la clase.")
+                                st.session_state["dummy_refresh"] = not st.session_state["dummy_refresh"]
+                                return
 
     st.divider()
     st.subheader("📊 Estadísticas y KPIs")
 
-    # Total de clases
+    # Total de clases y reservas
     total_clases = len(my_classes)
     total_reservas = sum(c["enrolled"] for c in my_classes)
 
-    st.markdown(f"""
-    - 🧾 **Total de clases creadas:** {total_clases}  
-    - 🧍‍♂️ **Total de reservas recibidas:** {total_reservas}
-    """)
+    col1, col2 = st.columns(2)
+    col1.metric("🧾 Clases creadas", total_clases)
+    col2.metric("👥 Total reservas", total_reservas)
 
     # Alumnos más frecuentes
     mis_ids = [c["id"] for c in my_classes]
@@ -107,3 +125,4 @@ def coach_view():
         for c in llenadas:
             porcentaje = (c["enrolled"] / c["capacity"]) * 100
             st.markdown(f"- {c['title']} ({c['date']}) — {porcentaje:.0f}% lleno")
+
