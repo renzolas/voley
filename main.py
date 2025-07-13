@@ -103,7 +103,7 @@ else:
 
     if nav == "Cerrar sesión":
         st.session_state["logged_user"] = None
-        st.experimental_rerun()
+        st.rerun()
     else:
         # 🔔 Mostrar notificaciones si hay
         notif = st.session_state["notifications"].get(user["username"], [])
