@@ -26,11 +26,15 @@ def login_view():
     password = st.text_input("Contraseña", type="password")
 
     if st.button("Entrar"):
-        user = next((u for u in st.session_state["users"] if u["username"] == username and u["password"] == password), None)
+        user = next(
+            (u for u in st.session_state["users"]
+             if u["username"] == username and u["password"] == password),
+            None
+        )
         if user:
             st.session_state["logged_user"] = user
-            st.session_state["rerun_flag"] = True
-
+            st.session_state["rerun_flag"] = True  # Se maneja desde main.py
         else:
             st.error("Usuario o contraseña incorrectos.")
+
 
