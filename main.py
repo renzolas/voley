@@ -27,7 +27,7 @@ defaults = {
 for key, val in defaults.items():
     if key not in st.session_state:
         st.session_state[key] = val
-        st.experimental_rerun()  # ← ⚠️ rerun() para reiniciar flujo con estado seguro
+        st.rerun()  # ← ⚠️ rerun() para reiniciar flujo con estado seguro
 
 # Título de app
 st.title("🏐 VolleyFit")
