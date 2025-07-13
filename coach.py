@@ -90,7 +90,7 @@ def coach_view():
                             )
 
                     st.success("Clase eliminada y usuarios notificados.")
-                    st.experimental_rerun()
+                    st.rerun()
 
     st.divider()
     st.markdown("### 📊 Estadísticas y KPIs")
