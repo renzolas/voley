@@ -68,6 +68,17 @@ def coach_view():
                 st.markdown(f"**Estado:** {estado}")
 
                 if st.button(f"Eliminar", key=f"eliminar_{c['id']}"):
+                    alumnos_inscritos = [
+                        r["username"] for r in st.session_state["reservations"]
+                        if r["class_id"] == c["id"]
+                    ]
+                    for alumno in alumnos_inscritos:
+                        if alumno not in st.session_state["notifications"]:
+                            st.session_state["notifications"][alumno] = []
+                        st.session_state["notifications"][alumno].append(
+                            f"❌ Tu clase '{c['title']}' del {c['date']} fue cancelada."
+                        )
+
                     st.session_state["classes"].remove(c)
                     st.session_state["reservations"] = [
                         r for r in st.session_state["reservations"] if r["class_id"] != c["id"]
@@ -76,7 +87,6 @@ def coach_view():
                     st.session_state["dummy_refresh"] = not st.session_state["dummy_refresh"]
                     return
 
-            # Mostrar alumnos con opción de eliminar
             alumnos = [r["username"] for r in st.session_state["reservations"] if r["class_id"] == c["id"]]
             if alumnos:
                 with st.expander("👥 Ver y eliminar alumnos"):
@@ -98,7 +108,6 @@ def coach_view():
     st.divider()
     st.subheader("📊 Estadísticas y KPIs")
 
-    # Total de clases y reservas
     total_clases = len(my_classes)
     total_reservas = sum(c["enrolled"] for c in my_classes)
 
@@ -106,7 +115,6 @@ def coach_view():
     col1.metric("🧾 Clases creadas", total_clases)
     col2.metric("👥 Total reservas", total_reservas)
 
-    # Alumnos más frecuentes
     mis_ids = [c["id"] for c in my_classes]
     alumno_frecuencia = {}
     for r in st.session_state["reservations"]:
@@ -118,7 +126,6 @@ def coach_view():
         for alumno, freq in sorted(alumno_frecuencia.items(), key=lambda x: x[1], reverse=True):
             st.markdown(f"- {alumno} — {freq} reservas")
 
-    # Clases más llenas
     llenadas = sorted(my_classes, key=lambda c: c["enrolled"], reverse=True)[:3]
     if llenadas:
         st.markdown("🔥 **Clases más populares:**")
