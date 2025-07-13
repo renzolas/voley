@@ -4,21 +4,24 @@ from auth import login_view, register_view
 from coach import coach_view
 from user import user_view
 
-# --- Inicializar estructuras en RAM ---
+# Inicializar estructuras en memoria RAM
 if "users" not in st.session_state:
-    st.session_state["users"] = []
+    st.session_state["users"] = []  # [{username, password, role}]
 if "classes" not in st.session_state:
-    st.session_state["classes"] = []
+    st.session_state["classes"] = []  # [{id, coach, sport, title, date, hour, capacity, enrolled}]
 if "reservations" not in st.session_state:
-    st.session_state["reservations"] = []
+    st.session_state["reservations"] = []  # [{username, class_id}]
+if "notifications" not in st.session_state:
+    st.session_state["notifications"] = {}  # {username: [mensajes]}
 if "logged_user" not in st.session_state:
     st.session_state["logged_user"] = None
 if "dummy_refresh" not in st.session_state:
-    st.session_state["dummy_refresh"] = False  # Para forzar rerender sin errores
+    st.session_state["dummy_refresh"] = False  # Forzar refresco controlado
 
-# --- Interfaz principal ---
+# Título
 st.title("🏐 VolleyFit App - Reservas deportivas")
 
+# Autenticación
 if st.session_state["logged_user"] is None:
     choice = st.sidebar.selectbox("Selecciona una opción", ["Iniciar sesión", "Registrarse"])
     if choice == "Iniciar sesión":
@@ -30,10 +33,11 @@ else:
     st.sidebar.success(f"Conectado como: {user['username']} ({user['role']})")
     if st.sidebar.button("Cerrar sesión"):
         st.session_state["logged_user"] = None
-        st.session_state["dummy_refresh"] = not st.session_state["dummy_refresh"]
+        st.experimental_rerun()
 
     if user["role"] == "coach":
         coach_view()
     elif user["role"] == "user":
         user_view()
+
 
