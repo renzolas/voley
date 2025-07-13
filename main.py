@@ -4,52 +4,119 @@ from auth import login_view, register_view
 from coach import coach_view
 from user import user_view
 
-# Estilo base
-st.set_page_config(page_title="VolleyFit", layout="centered")
+# Configuración de página
+st.set_page_config(page_title="VolleyFit App", layout="centered")
+
+# 💅 Estilo visual CSS embebido
 st.markdown("""
-<style>
-    h1 {color: #2E86C1;}
-    .verde {color: green;}
-    .rojo {color: red;}
-    .stButton>button {border-radius: 8px; padding: 8px 20px;}
-</style>
+    <style>
+    .stApp {
+        background-color: #f6f6f9;
+        font-family: "Segoe UI", sans-serif;
+    }
+
+    h1, h2, h3 {
+        color: #2c3e50;
+    }
+
+    .block-container {
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+    }
+
+    div.stButton > button {
+        background-color: #1abc9c;
+        color: white;
+        padding: 0.6em 1.5em;
+        border-radius: 8px;
+        border: none;
+        font-weight: 600;
+        font-size: 1rem;
+    }
+
+    div.stButton > button:hover {
+        background-color: #16a085;
+        transition: 0.3s;
+    }
+
+    input, select, textarea {
+        border-radius: 6px !important;
+    }
+
+    .card {
+        background-color: white;
+        padding: 16px;
+        margin-bottom: 10px;
+        border-radius: 10px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .kpi {
+        background: #ffffff;
+        padding: 20px;
+        border-radius: 8px;
+        text-align: center;
+        box-shadow: 0px 2px 4px rgba(0,0,0,0.05);
+        font-weight: bold;
+    }
+
+    details summary {
+        font-weight: 600;
+    }
+    </style>
 """, unsafe_allow_html=True)
 
-# 🧠 Estado en RAM (se crea si no existe)
-defaults = {
-    "users": [],
-    "classes": [],
-    "reservations": [],
-    "notifications": {},
-    "logged_user": None,
-    "dummy_refresh": False
-}
-for key, val in defaults.items():
-    if key not in st.session_state:
-        st.session_state[key] = val
-        st.rerun()  # ← ⚠️ rerun() para reiniciar flujo con estado seguro
+# 🔁 Inicializar estados de sesión
+if "users" not in st.session_state:
+    st.session_state["users"] = []
 
-# Título de app
-st.title("🏐 VolleyFit")
+if "classes" not in st.session_state:
+    st.session_state["classes"] = []
 
-# 🔐 Login o Registro
+if "reservations" not in st.session_state:
+    st.session_state["reservations"] = []
+
+if "logged_user" not in st.session_state:
+    st.session_state["logged_user"] = None
+
+if "notifications" not in st.session_state:
+    st.session_state["notifications"] = {}  # username: [msg1, msg2]
+
+# 🚀 Interfaz principal
+st.title("🏐 VolleyFit App — Reservas deportivas")
+
 if st.session_state["logged_user"] is None:
-    choice = st.sidebar.radio("Acceso", ["Iniciar sesión", "Registrarse"])
-    if choice == "Iniciar sesión":
+    with st.sidebar:
+        st.markdown("## Bienvenido 👋")
+        nav = st.radio("Menú principal", ["Iniciar sesión", "Registrarse"], index=0)
+
+    if nav == "Iniciar sesión":
         login_view()
     else:
         register_view()
 else:
     user = st.session_state["logged_user"]
-    st.sidebar.success(f"{user['username']} ({user['role']})")
-    
-    if st.sidebar.button("Cerrar sesión"):
-        st.session_state["logged_user"] = None
-        st.rerun()
 
-    if user["role"] == "coach":
-        coach_view()
+    with st.sidebar:
+        st.markdown(f"👤 **{user['username']}** ({user['role']})")
+        nav = st.radio("🏠 Navegación", ["Inicio", "Cerrar sesión"], index=0)
+
+    if nav == "Cerrar sesión":
+        st.session_state["logged_user"] = None
+        st.experimental_rerun()
     else:
-        user_view()
+        # 🔔 Mostrar notificaciones si hay
+        notif = st.session_state["notifications"].get(user["username"], [])
+        if notif:
+            with st.expander("🔔 Notificaciones importantes", expanded=True):
+                for msg in notif:
+                    st.warning(msg)
+            st.session_state["notifications"][user["username"]] = []
+
+        # Entrar al panel correspondiente
+        if user["role"] == "coach":
+            coach_view()
+        elif user["role"] == "user":
+            user_view()
 
 
