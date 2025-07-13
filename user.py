@@ -1,111 +1,89 @@
 # user.py
 import streamlit as st
-from datetime import datetime, timedelta
+from datetime import datetime
 
 def user_view():
-    st.header("🎯 Panel del Usuario")
+    st.header("🙋 Panel del Usuario")
+    username = st.session_state["logged_user"]["username"]
 
-    # Paso 1: Elegir deporte
-    st.subheader("1️⃣ Selecciona un deporte")
-    deporte = st.selectbox("Deporte", ["voley", "futbol", "gym"])
+    # Mostrar notificaciones
+    notis = st.session_state.get("notifications", {}).get(username, [])
+    if notis:
+        st.warning("🔔 Tienes notificaciones importantes:")
+        for n in notis:
+            st.markdown(f"- {n}")
+        if st.button("Marcar como leídas"):
+            st.session_state["notifications"][username] = []
 
-    # Paso 2: Mostrar coaches con clases disponibles de ese deporte
+    deporte = st.selectbox("Selecciona el deporte", ["voley", "futbol", "gym"])
+    fecha_seleccionada = st.date_input("📅 Ver clases del día", min_value=datetime.today())
+
     clases_disponibles = [
         c for c in st.session_state["classes"]
-        if c["sport"] == deporte and c["enrolled"] < c["capacity"]
-    ]
-    coaches = list({c["coach"] for c in clases_disponibles})
-
-    if not coaches:
-        st.info("No hay coaches disponibles para este deporte.")
-        return
-
-    st.subheader("2️⃣ Elige un coach")
-    coach = st.selectbox("Coach disponible", coaches)
-
-    # Paso 3: Mostrar clases del coach seleccionado
-    clases_coach = [
-        c for c in clases_disponibles if c["coach"] == coach
+        if c["sport"] == deporte and c["date"] == fecha_seleccionada.strftime("%Y-%m-%d")
     ]
 
-    if not clases_coach:
-        st.info("Este coach no tiene clases activas disponibles.")
+    st.subheader("📆 Clases disponibles")
+    if not clases_disponibles:
+        st.info("No hay clases disponibles para esta fecha.")
         return
 
-    st.subheader(f"3️⃣ Clases disponibles de {coach.capitalize()}")
-
-    usuario = st.session_state["logged_user"]["username"]
-    for c in sorted(clases_coach, key=lambda x: x["date"]):
-        reservado = any(r["username"] == usuario and r["class_id"] == c["id"]
-                        for r in st.session_state["reservations"])
+    for c in clases_disponibles:
         lleno = c["enrolled"] >= c["capacity"]
         estado = "🔴 Lleno" if lleno else "🟢 Disponible"
 
-        col1, col2 = st.columns([3, 1])
-        with col1:
-            st.markdown(f"""
-            **{c['title']}**  
-            📅 {c['date']} — 🕐 {c['hour']}  
-            👥 {c['enrolled']} / {c['capacity']}  
-            **Estado:** {estado}
-            """)
-        with col2:
-            if reservado:
-                st.info("Ya estás inscrito.")
-            elif not lleno:
-                if st.button("Reservar", key=f"reservar_{c['id']}"):
+        st.markdown(f"""
+        ### {c['title']}
+        🏷️ {c['sport'].capitalize()}  
+        📅 {c['date']} — 🕐 {c['hour']}  
+        👥 {c['enrolled']} / {c['capacity']} — **{estado}**
+        """)
+
+        if not lleno:
+            if st.button("Reservar", key=f"res_{c['id']}"):
+                ya_reservado = any(
+                    r for r in st.session_state["reservations"]
+                    if r["username"] == username and r["class_id"] == c["id"]
+                )
+                if not ya_reservado:
                     st.session_state["reservations"].append({
-                        "username": usuario,
+                        "username": username,
                         "class_id": c["id"]
                     })
                     c["enrolled"] += 1
-                    st.success("¡Reserva confirmada!")
+                    st.success("Reserva confirmada.")
                     st.session_state["dummy_refresh"] = not st.session_state["dummy_refresh"]
                     return
+                else:
+                    st.warning("Ya estás inscrito en esta clase.")
 
     st.divider()
+    st.subheader("📒 Mis reservas")
 
-    # Paso 4: Mostrar mis reservas
-    st.subheader("📌 Tus reservas")
-    mis_reservas = [
-        r for r in st.session_state["reservations"] if r["username"] == usuario
+    reservas_usuario = [
+        r for r in st.session_state["reservations"]
+        if r["username"] == username
     ]
-    if not mis_reservas:
-        st.info("Aún no tienes reservas activas.")
-        return
+    clases_reservadas = [
+        c for c in st.session_state["classes"] if any(r["class_id"] == c["id"] for r in reservas_usuario)
+    ]
 
-    for r in mis_reservas:
-        clase = next((c for c in st.session_state["classes"] if c["id"] == r["class_id"]), None)
-        if clase:
-            col1, col2 = st.columns([3, 1])
-            with col1:
-                st.markdown(f"""
-                **{clase['title']}**  
-                📅 {clase['date']} — 🕐 {clase['hour']}  
-                👥 {clase['enrolled']} / {clase['capacity']}
-                """)
-            with col2:
-                if st.button("Cancelar", key=f"cancelar_{r['class_id']}"):
-                    st.session_state["reservations"].remove(r)
-                    clase["enrolled"] -= 1
-                    st.success("Reserva cancelada.")
-                    st.session_state["dummy_refresh"] = not st.session_state["dummy_refresh"]
-                    return
-
-    # Paso 5: Ver calendario de próximas clases
-    st.divider()
-    st.subheader("📅 Calendario de próximos 4 días")
-    dias = [datetime.today() + timedelta(days=i) for i in range(4)]
-    for dia in dias:
-        dia_str = dia.strftime("%Y-%m-%d")
-        clases_dia = [
-            c for c in st.session_state["classes"]
-            if c["coach"] == coach and c["date"] == dia_str
-        ]
-        if clases_dia:
-            st.markdown(f"### {dia.strftime('%A %d/%m')}")
-            for c in clases_dia:
-                lleno = c["enrolled"] >= c["capacity"]
-                estado = "🔴 Lleno" if lleno else "🟢 Disponible"
-                st.markdown(f"- {c['title']} — 🕐 {c['hour']} ({estado})")
+    if not clases_reservadas:
+        st.info("No tienes clases reservadas.")
+    else:
+        for c in clases_reservadas:
+            st.markdown(f"""
+            **{c['title']}**  
+            📅 {c['date']} — 🕐 {c['hour']}  
+            👥 {c['enrolled']} / {c['capacity']}
+            """)
+            if st.button("Cancelar reserva", key=f"cancel_{c['id']}"):
+                st.session_state["reservations"] = [
+                    r for r in st.session_state["reservations"]
+                    if not (r["username"] == username and r["class_id"] == c["id"])
+                ]
+                c["enrolled"] -= 1
+                st.success("Reserva cancelada.")
+                st.session_state["dummy_refresh"] = not st.session_state["dummy_refresh"]
+                return
 
