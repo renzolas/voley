@@ -57,7 +57,7 @@ def user_view():
                             })
                             clase["enrolled"] += 1
                             st.success("✅ Clase reservada exitosamente.")
-                            st.experimental_rerun()
+                            st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
 
     st.divider()
@@ -95,7 +95,7 @@ def user_view():
                     ]
                     clase["enrolled"] -= 1
                     st.success("❌ Reserva cancelada.")
-                    st.experimental_rerun()
+                    st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
 
 
