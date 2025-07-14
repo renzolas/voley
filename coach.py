@@ -127,7 +127,7 @@ def coach_view(tab="create"):
                             r for r in st.session_state["reservations"] if r["class_id"] != c["id"]
                         ]
                         st.success("Clase eliminada.")
-                        st.experimental_rerun()
+                        st.rerun()
 
                 st.markdown("</div>", unsafe_allow_html=True)
 
