@@ -93,7 +93,7 @@ def coach_view(tab="create"):
                 st.session_state["classes"].append(base_class)
 
             st.success("Clase(s) creada(s) correctamente.")
-            st.experimental_rerun()
+            st.rerun()
 
     elif tab == "list":
         st.header("📋 Tus clases")
