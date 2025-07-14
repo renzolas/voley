@@ -29,7 +29,7 @@ else:
     st.sidebar.success(f"Conectado como: {user['username']} ({user['role']})")
     if st.sidebar.button("Cerrar sesión"):
         st.session_state["logged_user"] = None
-        st.experimental_rerun()
+        st.rerun()
 
     # Navegación con pestañas para Coach y Usuario
     if user["role"] == "coach":
