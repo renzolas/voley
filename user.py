@@ -103,7 +103,7 @@ def user_view(tab="browse"):
                     # Aumentar inscritos
                     c["enrolled"] += 1
                     st.success("Reserva realizada con éxito!")
-                    st.experimental_rerun()
+                    st.rerun()
 
             st.markdown("</div>", unsafe_allow_html=True)
 
@@ -139,7 +139,7 @@ def user_view(tab="browse"):
                     st.session_state["reservations"].remove(r)
                     clase["enrolled"] -= 1
                     st.success("Reserva cancelada.")
-                    st.experimental_rerun()
+                    st.rerun()
 
             st.markdown("</div>", unsafe_allow_html=True)
 
